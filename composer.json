@@ -1,5 +1,5 @@
 {
-    "name":        "hwi/oauth-bundle",
+    "name":        "holyjo/oauth-bundle",
     "type":        "symfony-bundle",
     "description": "Support for authenticating users using both OAuth1.0a and OAuth2 in Symfony2.",
     "keywords":    [
@@ -35,6 +35,7 @@
         "sensio connect",
         "stack exchange",
         "stereomood",
+        "stripe",
         "sina weibo",
         "trello",
         "twitch",
@@ -46,7 +47,7 @@
         "yandex",
         "37signals"
     ],
-    "homepage":    "http://github.com/hwi/HWIOAuthBundle",
+    "homepage":    "http://github.com/holyjo/HWIOAuthBundle",
     "license":     "MIT",
 
     "authors": [
