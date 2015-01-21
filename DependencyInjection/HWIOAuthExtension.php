@@ -82,6 +82,8 @@ class HWIOAuthExtension extends Extension
         if (isset($config['connect'])) {
             $container->setParameter('hwi_oauth.connect', true);
 
+            $container->setAlias('hwi_oauth.account.connector', 'c4.accounts.admin_user_provider');
+
             if (isset($config['fosub'])) {
                 // setup fosub bridge services
                 $container->setAlias('hwi_oauth.account.connector', 'hwi_oauth.user.provider.fosub_bridge');
