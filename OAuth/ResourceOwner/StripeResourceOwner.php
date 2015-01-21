@@ -11,6 +11,7 @@
 
 namespace HWI\Bundle\OAuthBundle\OAuth\ResourceOwner;
 
+use HWI\Bundle\OAuthBundle\Security\Core\Authentication\Token\OAuthToken;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 
@@ -44,4 +45,18 @@ class StripeResourceOwner extends GenericOAuth2ResourceOwner
             'infos_url'         => null,
         ));
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getUserInformation(array $accessToken, array $extraParameters = array())
+    {
+        $response = $this->getUserResponse();
+        $response->setResponse($accessToken);
+        $response->setResourceOwner($this);
+        $response->setOAuthToken(new OAuthToken($accessToken));
+
+        return $response;
+    }
+
 }
