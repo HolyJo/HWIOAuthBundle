@@ -38,8 +38,7 @@ class StripeResourceOwner extends GenericOAuth2ResourceOwner
         parent::configureOptions($resolver);
 
         $resolver->setDefaults(array(
-            'sandbox'           => false,
-            'scope'             => 'openid email',
+            'scope'             => 'read_write',
             'authorization_url' => 'https://connect.stripe.com/oauth/authorize',
             'access_token_url'  => 'https://connect.stripe.com/oauth/token',
             'infos_url'         => null,
