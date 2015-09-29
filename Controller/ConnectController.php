@@ -182,6 +182,10 @@ class ConnectController extends ContainerAware
         } else {
             $accessToken = $session->get('_hwi_oauth.connect_confirmation.'.$key);
         }
+        
+        if (!is_array($accessToken)) {
+            $accessToken = array($accessToken);
+        }
 
         $userInformation = $resourceOwner->getUserInformation($accessToken);
 
