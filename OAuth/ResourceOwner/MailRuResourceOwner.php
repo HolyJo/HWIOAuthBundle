@@ -12,7 +12,7 @@
 namespace HWI\Bundle\OAuthBundle\OAuth\ResourceOwner;
 
 use HWI\Bundle\OAuthBundle\Security\Core\Authentication\Token\OAuthToken;
-use Symfony\Component\OptionsResolver\OptionsResolverInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * MailRuResourceOwner
@@ -48,7 +48,7 @@ class MailRuResourceOwner extends GenericOAuth2ResourceOwner
         $url = $this->normalizeUrl($this->options['infos_url'], $params);
 
         $content = $this->doGetUserInformationRequest($url)->getContent();
-        $content = json_decode($content);
+        $content = json_decode($content, true);
         if (isset($content[0])) {
             $content = (array) $content[0];
         }
@@ -64,7 +64,7 @@ class MailRuResourceOwner extends GenericOAuth2ResourceOwner
     /**
      * {@inheritDoc}
      */
-    protected function configureOptions(OptionsResolverInterface $resolver)
+    protected function configureOptions(OptionsResolver $resolver)
     {
         parent::configureOptions($resolver);
 

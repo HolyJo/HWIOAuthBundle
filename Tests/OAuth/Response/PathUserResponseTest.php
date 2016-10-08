@@ -51,7 +51,9 @@ class PathUserResponseTest extends \PHPUnit_Framework_TestCase
 
     public function testGetSetResourceOwner()
     {
-        $resourceOwner = $this->getMock('\HWI\Bundle\OAuthBundle\OAuth\ResourceOwnerInterface');
+        $resourceOwner = $this->getMockBuilder('\HWI\Bundle\OAuthBundle\OAuth\ResourceOwnerInterface')
+            ->disableOriginalConstructor()
+            ->getMock();
 
         $this->responseObject->setResourceOwner($resourceOwner);
         $this->assertEquals($resourceOwner, $this->responseObject->getResourceOwner());
@@ -62,6 +64,8 @@ class PathUserResponseTest extends \PHPUnit_Framework_TestCase
         $paths = array(
             'identifier'     => null,
             'nickname'       => null,
+            'firstname'      => null,
+            'lastname'       => null,
             'realname'       => null,
             'email'          => null,
             'profilepicture' => null,
@@ -75,6 +79,8 @@ class PathUserResponseTest extends \PHPUnit_Framework_TestCase
         $paths = array(
             'identifier'     => null,
             'nickname'       => null,
+            'firstname'      => null,
+            'lastname'       => null,
             'realname'       => null,
             'email'          => null,
             'profilepicture' => null,

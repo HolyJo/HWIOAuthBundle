@@ -19,8 +19,18 @@ class OAuthProviderTest extends \PHPUnit_Framework_TestCase
 {
     public function testSupportsOAuthToken()
     {
-        $oauthProvider = new OAuthProvider($this->getOAuthAwareUserProviderMock(), $this->getResourceOwnerMapMock(), $this->getUserCheckerMock());
-        $this->assertTrue($oauthProvider->supports(new OAuthToken('')));
+        $resourceOwnerMapMock = $this->getResourceOwnerMapMock();
+        $resourceOwnerMapMock->expects($this->once())
+            ->method('hasResourceOwnerByName')
+            ->with($this->equalTo('owner'))
+            ->will($this->returnValue(true));
+
+        $oauthProvider = new OAuthProvider($this->getOAuthAwareUserProviderMock(), $resourceOwnerMapMock, $this->getUserCheckerMock());
+
+        $token = new OAuthToken('');
+        $token->setResourceOwnerName('owner');
+
+        $this->assertTrue($oauthProvider->supports($token));
     }
 
     public function testAuthenticatesToken()
@@ -33,7 +43,7 @@ class OAuthProviderTest extends \PHPUnit_Framework_TestCase
         );
 
         $oauthTokenMock = $this->getOAuthTokenMock();
-        $oauthTokenMock->expects($this->once())
+        $oauthTokenMock->expects($this->exactly(2))
             ->method('getResourceOwnerName')
             ->will($this->returnValue('github'));
         $oauthTokenMock->expects($this->exactly(2))
@@ -54,6 +64,10 @@ class OAuthProviderTest extends \PHPUnit_Framework_TestCase
             ->method('getResourceOwnerByName')
             ->with($this->equalTo('github'))
             ->will($this->returnValue($resourceOwnerMock));
+        $resourceOwnerMapMock->expects($this->once())
+            ->method('hasResourceOwnerByName')
+            ->with($this->equalTo('github'))
+            ->will($this->returnValue(true));
 
         $userMock = $this->getUserMock();
         $userMock->expects($this->once())
@@ -98,7 +112,7 @@ class OAuthProviderTest extends \PHPUnit_Framework_TestCase
         );
 
         $oauthTokenMock = $this->getOAuthTokenMock();
-        $oauthTokenMock->expects($this->exactly(2))
+        $oauthTokenMock->expects($this->exactly(3))
             ->method('getResourceOwnerName')
             ->will($this->returnValue('github'));
         $oauthTokenMock->expects($this->exactly(2))
@@ -128,6 +142,10 @@ class OAuthProviderTest extends \PHPUnit_Framework_TestCase
             ->method('getResourceOwnerByName')
             ->with($this->equalTo('github'))
             ->will($this->returnValue($resourceOwnerMock));
+        $resourceOwnerMapMock->expects($this->once())
+            ->method('hasResourceOwnerByName')
+            ->with($this->equalTo('github'))
+            ->will($this->returnValue(true));
 
         $userProviderMock = $this->getOAuthAwareUserProviderMock();
         $userProviderMock->expects($this->once())
@@ -156,38 +174,50 @@ class OAuthProviderTest extends \PHPUnit_Framework_TestCase
 
     protected function getOAuthAwareUserProviderMock()
     {
-        return $this->getMock('\HWI\Bundle\OAuthBundle\Security\Core\User\OAuthAwareUserProviderInterface');
+        return $this->getMockBuilder('\HWI\Bundle\OAuthBundle\Security\Core\User\OAuthAwareUserProviderInterface')
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     protected function getResourceOwnerMapMock()
     {
         return $this->getMockBuilder('\HWI\Bundle\OAuthBundle\Security\Http\ResourceOwnerMap')
-            ->disableOriginalConstructor()->getMock();
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     protected function getOAuthTokenMock()
     {
         return $this->getMockBuilder('\HWI\Bundle\OAuthBundle\Security\Core\Authentication\Token\OAuthToken')
-            ->disableOriginalConstructor()->getMock();
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     protected function getResourceOwnerMock()
     {
-        return $this->getMock('\HWI\Bundle\OAuthBundle\OAuth\ResourceOwnerInterface');
+        return $this->getMockBuilder('\HWI\Bundle\OAuthBundle\OAuth\ResourceOwnerInterface')
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     protected function getUserResponseMock()
     {
-        return $this->getMock('\HWI\Bundle\OAuthBundle\OAuth\Response\UserResponseInterface');
+        return $this->getMockBuilder('\HWI\Bundle\OAuthBundle\OAuth\Response\UserResponseInterface')
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     protected function getUserCheckerMock()
     {
-        return $this->getMock('\Symfony\Component\Security\Core\User\UserCheckerInterface');
+        return $this->getMockBuilder('\Symfony\Component\Security\Core\User\UserCheckerInterface')
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     protected function getUserMock()
     {
-        return $this->getMock('\Symfony\Component\Security\Core\User\UserInterface');
+        return $this->getMockBuilder('\Symfony\Component\Security\Core\User\UserInterface')
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 }

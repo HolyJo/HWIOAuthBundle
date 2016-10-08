@@ -1,13 +1,9 @@
 Step 1: Setting up the bundle
 =============================
-### A) Add HWIOAuthBundle to your composer.json
+### A) Add HWIOAuthBundle to your project
 
-```yaml
-{
-    "require": {
-        "hwi/oauth-bundle": "0.4.*@dev"
-    }
-}
+```bash
+composer require hwi/oauth-bundle
 ```
 
 ### B) Enable the bundle
@@ -34,6 +30,10 @@ Import the `redirect.xml` and `login.xml` routing files in your own routing file
 # app/config/routing.yml
 hwi_oauth_redirect:
     resource: "@HWIOAuthBundle/Resources/config/routing/redirect.xml"
+    prefix:   /connect
+    
+hwi_oauth_connect:
+    resource: "@HWIOAuthBundle/Resources/config/routing/connect.xml"
     prefix:   /connect
 
 hwi_oauth_login:

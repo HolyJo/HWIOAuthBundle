@@ -11,7 +11,7 @@
 
 namespace HWI\Bundle\OAuthBundle\OAuth\ResourceOwner;
 
-use Symfony\Component\OptionsResolver\OptionsResolverInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * BitlyResourceOwner
@@ -33,11 +33,12 @@ class BitlyResourceOwner extends GenericOAuth2ResourceOwner
     /**
      * {@inheritDoc}
      */
-    protected function configureOptions(OptionsResolverInterface $resolver)
+    protected function configureOptions(OptionsResolver $resolver)
     {
         parent::configureOptions($resolver);
 
         $resolver->setDefaults(array(
+            'use_bearer_authorization' => false,
             'authorization_url' => 'https://bitly.com/oauth/authorize',
             'access_token_url'  => 'https://api-ssl.bitly.com/oauth/access_token',
             'infos_url'         => 'https://api-ssl.bitly.com/v3/user/info?format=json',

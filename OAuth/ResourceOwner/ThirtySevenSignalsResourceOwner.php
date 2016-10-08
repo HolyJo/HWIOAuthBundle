@@ -12,7 +12,7 @@
 namespace HWI\Bundle\OAuthBundle\OAuth\ResourceOwner;
 
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\OptionsResolver\OptionsResolverInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * ThirtySevenSignalsResourceOwner (37signals)
@@ -27,6 +27,8 @@ class ThirtySevenSignalsResourceOwner extends GenericOAuth2ResourceOwner
     protected $paths = array(
         'identifier' => 'identity.id',
         'nickname'   => 'identity.email_address',
+        'firstname'  => 'identity.first_name',
+        'lastname'   => 'identity.last_name',
         'realname'   => array('identity.last_name', 'identity.first_name'),
         'email'      => 'identity.email_address',
     );
@@ -50,7 +52,7 @@ class ThirtySevenSignalsResourceOwner extends GenericOAuth2ResourceOwner
     /**
      * {@inheritDoc}
      */
-    protected function configureOptions(OptionsResolverInterface $resolver)
+    protected function configureOptions(OptionsResolver $resolver)
     {
         parent::configureOptions($resolver);
 

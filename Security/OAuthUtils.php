@@ -14,12 +14,11 @@ namespace HWI\Bundle\OAuthBundle\Security;
 use HWI\Bundle\OAuthBundle\OAuth\ResourceOwnerInterface;
 use HWI\Bundle\OAuthBundle\Security\Http\ResourceOwnerMap;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\SecurityContextInterface;
 use Symfony\Component\Security\Http\HttpUtils;
 
 /**
- * OAuthUtils
- *
  * @author Alexander <iam.asm89@gmail.com>
  * @author Joseph Bielawski <stloyd@gmail.com>
  * @author Francisco Facioni <fran6co@gmail.com>
@@ -41,33 +40,48 @@ class OAuthUtils
     protected $httpUtils;
 
     /**
-     * @var ResourceOwnerMap
+     * @var ResourceOwnerMap[]
      */
-    protected $ownerMap;
+    protected $ownerMaps = array();
 
     /**
      * @var SecurityContextInterface
+     *
+     * @deprecated since 0.4. To be removed in 1.0. Use $authorizationChecker property instead.
      */
     protected $securityContext;
 
     /**
-     * @param HttpUtils                $httpUtils
-     * @param SecurityContextInterface $securityContext
-     * @param boolean                  $connect
+     * SecurityContextInterface for Symfony <2.6
+     * To be removed with all related logic (constructor, configs, extension)
+     *
+     * @var AuthorizationCheckerInterface|SecurityContextInterface
      */
-    public function __construct(HttpUtils $httpUtils, SecurityContextInterface $securityContext, $connect)
+    protected $authorizationChecker;
+
+    /**
+     * @param HttpUtils                                              $httpUtils
+     * @param AuthorizationCheckerInterface|SecurityContextInterface $authorizationChecker
+     * @param boolean                                                $connect
+     */
+    public function __construct(HttpUtils $httpUtils, $authorizationChecker, $connect)
     {
-        $this->httpUtils       = $httpUtils;
-        $this->securityContext = $securityContext;
-        $this->connect         = $connect;
+        if (!$authorizationChecker instanceof AuthorizationCheckerInterface && !$authorizationChecker instanceof SecurityContextInterface) {
+            throw new \InvalidArgumentException('Argument 2 should be an instance of Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface or Symfony\Component\Security\Core\SecurityContextInterface');
+        }
+
+        $this->httpUtils            = $httpUtils;
+        $this->authorizationChecker = $authorizationChecker;
+        $this->securityContext      = $this->authorizationChecker;
+        $this->connect              = $connect;
     }
 
     /**
      * @param ResourceOwnerMap $ownerMap
      */
-    public function setResourceOwnerMap(ResourceOwnerMap $ownerMap)
+    public function addResourceOwnerMap(ResourceOwnerMap $ownerMap)
     {
-        $this->ownerMap = $ownerMap;
+        $this->ownerMaps[] = $ownerMap;
     }
 
     /**
@@ -75,7 +89,11 @@ class OAuthUtils
      */
     public function getResourceOwners()
     {
-        $resourceOwners = $this->ownerMap->getResourceOwners();
+        $resourceOwners = array();
+
+        foreach ($this->ownerMaps as $ownerMap) {
+            $resourceOwners = array_merge($resourceOwners, $ownerMap->getResourceOwners());
+        }
 
         return array_keys($resourceOwners);
     }
@@ -92,8 +110,8 @@ class OAuthUtils
     {
         $resourceOwner = $this->getResourceOwner($name);
         if (null === $redirectUrl) {
-            if (!$this->connect || !$this->securityContext->isGranted('IS_AUTHENTICATED_REMEMBERED')) {
-                $redirectUrl = $this->httpUtils->generateUri($request, $this->ownerMap->getResourceOwnerCheckPath($name));
+            if (!$this->connect || !$this->authorizationChecker->isGranted('IS_AUTHENTICATED_REMEMBERED')) {
+                $redirectUrl = $this->httpUtils->generateUri($request, $this->getResourceOwnerCheckPath($name));
             } else {
                 $redirectUrl = $this->getServiceAuthUrl($request, $resourceOwner);
             }
@@ -111,13 +129,12 @@ class OAuthUtils
     public function getServiceAuthUrl(Request $request, ResourceOwnerInterface $resourceOwner)
     {
         if ($resourceOwner->getOption('auth_with_one_url')) {
-            $redirectUrl = $this->httpUtils->generateUri($request, $this->ownerMap->getResourceOwnerCheckPath($resourceOwner->getName())).'?authenticated=true';
-        } else {
-            $request->attributes->set('service', $resourceOwner->getName());
-            $redirectUrl = $this->httpUtils->generateUri($request, 'hwi_oauth_connect_service');
+            return $this->httpUtils->generateUri($request, $this->getResourceOwnerCheckPath($resourceOwner->getName()));
         }
 
-        return $redirectUrl;
+        $request->attributes->set('service', $resourceOwner->getName());
+
+        return $this->httpUtils->generateUri($request, 'hwi_oauth_connect_service');
     }
 
     /**
@@ -240,11 +257,35 @@ class OAuthUtils
      */
     protected function getResourceOwner($name)
     {
-        $resourceOwner = $this->ownerMap->getResourceOwnerByName($name);
+        $resourceOwner = null;
+
+        foreach ($this->ownerMaps as $ownerMap) {
+            $resourceOwner = $ownerMap->getResourceOwnerByName($name);
+            if ($resourceOwner instanceof ResourceOwnerInterface) {
+                return $resourceOwner;
+            }
+        }
+
         if (!$resourceOwner instanceof ResourceOwnerInterface) {
             throw new \RuntimeException(sprintf("No resource owner with name '%s'.", $name));
         }
 
         return $resourceOwner;
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return null|string
+     */
+    protected function getResourceOwnerCheckPath($name)
+    {
+        foreach ($this->ownerMaps as $ownerMap) {
+            if ($potentialResourceOwnerCheckPath = $ownerMap->getResourceOwnerCheckPath($name)) {
+                return $potentialResourceOwnerCheckPath;
+            }
+        }
+
+        return null;
     }
 }

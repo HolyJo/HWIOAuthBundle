@@ -12,7 +12,7 @@
 namespace HWI\Bundle\OAuthBundle\OAuth\ResourceOwner;
 
 use Symfony\Component\OptionsResolver\Options;
-use Symfony\Component\OptionsResolver\OptionsResolverInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * PaypalResourceOwner
@@ -33,7 +33,7 @@ class PaypalResourceOwner extends GenericOAuth2ResourceOwner
     /**
      * {@inheritDoc}
      */
-    protected function configureOptions(OptionsResolverInterface $resolver)
+    protected function configureOptions(OptionsResolver $resolver)
     {
         parent::configureOptions($resolver);
 
@@ -45,9 +45,14 @@ class PaypalResourceOwner extends GenericOAuth2ResourceOwner
             'infos_url'         => 'https://api.paypal.com/v1/identity/openidconnect/userinfo/?schema=openid',
         ));
 
-        $resolver->addAllowedTypes(array(
-            'sandbox' => 'bool',
-        ));
+        if (method_exists($resolver, 'setDefined')) {
+            $resolver->addAllowedTypes('sandbox', 'bool');
+        } else {
+            $resolver->addAllowedTypes(array(
+                'sandbox' => 'bool',
+            ));
+        }
+
 
         $sandboxTransformation = function (Options $options, $value) {
             if (!$options['sandbox']) {
@@ -57,10 +62,19 @@ class PaypalResourceOwner extends GenericOAuth2ResourceOwner
             return preg_replace('~\.paypal\.~', '.sandbox.paypal.', $value, 1);
         };
 
-        $resolver->setNormalizers(array(
-            'authorization_url' => $sandboxTransformation,
-            'access_token_url'  => $sandboxTransformation,
-            'infos_url'         => $sandboxTransformation,
-        ));
+        // Symfony <2.6 BC
+        if (method_exists($resolver, 'setNormalizer')) {
+            $resolver
+                ->setNormalizer('authorization_url', $sandboxTransformation)
+                ->setNormalizer('access_token_url', $sandboxTransformation)
+                ->setNormalizer('infos_url', $sandboxTransformation)
+            ;
+        } else {
+            $resolver->setNormalizers(array(
+                'authorization_url' => $sandboxTransformation,
+                'access_token_url'  => $sandboxTransformation,
+                'infos_url'         => $sandboxTransformation,
+            ));
+        }
     }
 }
